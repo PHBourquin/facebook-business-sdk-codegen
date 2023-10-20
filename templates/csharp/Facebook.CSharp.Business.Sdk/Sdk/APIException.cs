@@ -22,13 +22,47 @@
  */
 
 using System;
-using System.Text;
+using System.Runtime.Serialization;
 
-namespace Facebook.Ads.SDK
+namespace Facebook.Csharp.Business.Sdk.Sdk
 {
-  public class APIConfig {
-    public const string DEFAULT_API_VERSION = "{{api_version}}";
-    public const string DEFAULT_API_BASE = "https://graph.facebook.com";
-    public const string USER_AGENT = "fb-csharp-ads-api-sdk-{{api_version}}";
+  [Serializable()]
+  public class APIException : Exception, IAPIResponse<APINode>
+  {
+    public APIException()
+    {
+    }
+
+    public APIException(string message)
+      : base(message)
+    {
+    }
+
+    public APIException(string message, Exception innerException)
+      : base (message, innerException)
+    {
+    }
+
+    protected APIException(SerializationInfo info, StreamingContext context)
+      : base(info, context)
+    {
+    }
+
+    public APIException Exception => this;
+
+    public APINode Head()
+    {
+      return null;
+    }
+
+    public string ToRawResponse()
+    {
+      return Message;
+    }
+
+    public override string ToString()
+    {
+      return ToRawResponse();
+    }
   }
 }

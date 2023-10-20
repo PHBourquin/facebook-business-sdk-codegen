@@ -21,12 +21,12 @@
  *
  */
 
-namespace Facebook.Ads.SDK
+namespace Facebook.Csharp.Business.Sdk.Sdk
 {
-  public interface IAPIResponse
+  public interface IAPIResponse<T>
   {
     APIException Exception { get; }
     string ToRawResponse();
-    APINode Head();
+    T Head();
   }
 }

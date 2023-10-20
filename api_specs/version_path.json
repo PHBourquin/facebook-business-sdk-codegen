@@ -23,5 +23,10 @@
         "base_path": "sdk/servers/php/release",
         "file_path": "src/FacebookAds/ApiConfig.php",
         "line_starter": "const SDKVersion"
+    },
+    "csharp": {
+        "base_path": "facebook-business-sdk-codegen/templates/csharp/Facebook.CSharp.Business.Sdk",
+        "file_path": "Facebook.CSharp.Business.Sdk.csproj",
+        "line_starter": "<version>"
     }
 }

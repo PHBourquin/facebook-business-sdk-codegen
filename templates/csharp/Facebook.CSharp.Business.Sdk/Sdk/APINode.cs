@@ -21,38 +21,38 @@
 *
 */
 
-using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
-namespace Facebook.Ads.SDK
+namespace Facebook.Csharp.Business.Sdk.Sdk
 {
-  public class APINodeList<T> : List<T>, IAPIResponse where T : APINode
+  public class APINode : IAPIResponse<APINode>
   {
-    private string before;
-    private string after;
-    private APIRequest<T> request;
-    private string rawValue;
+    protected string rawValue = null;
 
-    public APINodeList(APIRequest<T> request, string rawValue)
-    {
-      this.request = request;
-      this.rawValue = rawValue;
-    }
+    [JsonIgnore]
+    public APIContext Context { get; set; }
 
-    public APIException Exception
-    {
-      get { return null; }
-    }
-
-    public APINode Head()
-    {
-      return this.Count > 0 ? this[0] : null;
-    }
+    public APIException Exception => null;
 
     public string ToRawResponse()
     {
       return rawValue;
     }
 
+    public APINode Head()
+    {
+      return this;
+    }
+
+    public static APINodeList<APINode> ParseCollectionResponse(string json, APIContext context, APIRequest<APINode> request)
+    {
+      return null;
+    }
+
+    public static APINode ParseSingleResponse(string json, APIContext context, APIRequest<APINode> request)
+    {
+      return null;
+    }
   }
 }

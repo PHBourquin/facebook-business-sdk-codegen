@@ -1,0 +1,320 @@
+/**
+ * Copyright (c) 2015-present, Facebook, Inc. All rights reserved.
+ *
+ * You are hereby granted a non-exclusive, worldwide, royalty-free license to
+ * use, copy, modify, and distribute this software in source code or binary
+ * form for use in connection with the web services and APIs provided by
+ * Facebook.
+ *
+ * As with any software that integrates with the Facebook platform, your use
+ * of this software is subject to the Facebook Developer Principles and
+ * Policies [http://developers.facebook.com/policy/]. This copyright notice
+ * shall be included in all copies or substantial portions of the software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ *
+ */
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Runtime.Serialization;
+using System.Text;
+using System.Threading.Tasks;
+using Facebook.Csharp.Business.Sdk.Sdk;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+
+namespace Facebook.Csharp.Business.Sdk
+{
+  sealed public class {{name:pascal_case}} : APINode
+  {
+    {{#fields}}
+    [JsonProperty("{{name:underscore}}")]
+    public {{{type:csharp}}}? Field{{name:pascal_case}} { get; set; }
+    {{/fields}}
+
+    {{#cls_is_AdCreative}}
+    private string mCreativeId;
+    {{/cls_is_AdCreative}}
+
+    public {{name:pascal_case}}()
+    {
+    }
+
+    {{#has_get}}
+    public {{name:pascal_case}}(long id, APIContext context)
+      : this(id.ToString(), context)
+    {
+    }
+
+    public {{name:pascal_case}}(string id, APIContext context)
+    {
+      FieldId = id;
+      {{#cls_is_AdCreative}}
+      mCreativeId = FieldId.ToString();
+      {{/cls_is_AdCreative}}
+      Context = context;
+    }
+
+    public static Task<{{name:pascal_case}}> FetchByIdAsync(long id, APIContext context)
+    {
+      return FetchByIdAsync(id.ToString(), context);
+    }
+
+    public static Task<{{name:pascal_case}}> FetchByIdAsync(string id, APIContext context)
+    {
+      return new APIRequestGet(id, context)
+        .RequestAllFields()
+        .ExecuteAsync();
+    }
+
+    private string PrefixedId
+    {
+      get
+      {
+        {{#cls_is_AdAccount}}
+        return ("act_" + FieldId.ToString());
+        {{/cls_is_AdAccount}}
+        {{^cls_is_AdAccount}}
+        return FieldId.ToString();
+        {{/cls_is_AdAccount}}
+      }
+    }
+    {{/has_get}}
+
+    public static APINodeList<{{name:pascal_case}}> ParseCollectionResponse(string json, APIContext context, APICollectionRequest<{{name:pascal_case}}> request)
+    {
+      APIParser.ThrowOnErrorResponse(json);
+      var obj = JsonConvert.DeserializeObject<APIDataResponse<{{name:pascal_case}}>>(json);
+      var modelList = new APINodeList<{{name:pascal_case}}>(request, json, obj.Paging);
+      foreach (var o in obj.Data)
+      {
+        o.Context = context;
+        modelList.Add(o);
+      }
+      return modelList;
+    }
+
+    public static {{name:pascal_case}} ParseSingleResponse(string json, APIContext context, APIRequest<{{name:pascal_case}}> request)
+    {
+      APIParser.ThrowOnErrorResponse(json);
+      var obj = JsonConvert.DeserializeObject<{{name:pascal_case}}>(json);
+      obj.Context = context;
+      return obj;
+    }
+
+    public override string ToString()
+    {
+      return JsonConvert.SerializeObject(this, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
+    }
+
+    #region API Requests
+    {{#apis}}
+    public APIRequest{{name:pascal_case}} {{name:pascal_case}}()
+    {
+      return new APIRequest{{name:pascal_case}}({{^has_get}}FieldId{{/has_get}}{{#has_get}}PrefixedId.ToString(){{/has_get}}, Context);
+    }
+
+    {{/apis}}
+    #endregion
+
+    #region API Request inner classes
+
+    {{#apis}}
+    {{#return_single_node}}
+    public class APIRequest{{name:pascal_case}} : APIRequest<{{{return}}}{{^return}}APINode{{/return}}>
+    {{/return_single_node}}
+    {{^return_single_node}}
+    public class APIRequest{{name:pascal_case}} : APICollectionRequest<{{{return}}}{{^return}}APINode{{/return}}>
+    {{/return_single_node}}
+    {
+      public static string[] PARAMS =
+      {
+        {{#params}}
+        "{{api_name}}",
+        {{/params}}
+        {{#allow_file_upload}}
+        "file",
+        {{/allow_file_upload}}
+      };
+
+      public static string[] FIELDS =
+      {
+        {{#param_fields}}
+        {{^not_visible}}
+        "{{api_name}}",
+        {{/not_visible}}
+        {{/param_fields}}
+      };
+
+      public APIRequest{{name:pascal_case}}(string nodeId, APIContext context)
+        : base(context, nodeId, "{{{endpoint}}}", "{{{method}}}", PARAMS)
+      {
+      }
+
+      {{#return_single_node}}
+      {{#is_update_or_delete}}
+      public Task<bool> ExecuteAsync(CancellationToken cancellationToken = default)
+      {
+        return ExecuteAsync(new Dictionary<string, object>(), cancellationToken);
+      }
+
+      public async Task<bool> ExecuteAsync(Dictionary<string, object> extraParams, CancellationToken cancellationToken = default)
+      {
+        return APIParser.ParseUpdateDeleteResponse(await SendRequestAsync(extraParams, cancellationToken));
+      }
+      {{/is_update_or_delete}}
+      {{^is_update_or_delete}}
+      public Task<{{{return}}}{{^return}}APINode{{/return}}> ExecuteAsync(CancellationToken cancellationToken = default)
+      {
+        return ExecuteAsync(new Dictionary<string, object>(), cancellationToken);
+      }
+
+      public async Task<{{{return}}}{{^return}}APINode{{/return}}> ExecuteAsync(Dictionary<string, object> extraParams, CancellationToken cancellationToken = default)
+      {
+        return {{{return}}}{{^return}}APINode{{/return}}.ParseSingleResponse(await SendRequestAsync(extraParams, cancellationToken), Context, this);
+      }
+      {{/is_update_or_delete}}
+
+      public override bool IsCollectionResponse
+      {
+        get { return false; }
+      }
+      {{/return_single_node}}
+      {{^return_single_node}}
+      public override Task<APINodeList<{{{return}}}{{^return}}APINode{{/return}}>> ExecuteAsync(CancellationToken cancellationToken = default)
+      {
+        return ExecuteAsync(new Dictionary<string, object>(), cancellationToken);
+      }
+
+      public override async Task<APINodeList<{{{return}}}{{^return}}APINode{{/return}}>> ExecuteAsync(Dictionary<string, object> extraParams, CancellationToken cancellationToken = default)
+      {
+        return {{{return}}}{{^return}}APINode{{/return}}.ParseCollectionResponse(await SendRequestAsync(extraParams, cancellationToken), Context, this);
+      }
+
+      public override bool IsCollectionResponse
+      {
+        get { return true; }
+      }
+      {{/return_single_node}}
+
+      public APIRequest{{api:name:pascal_case}} SetParam(string parameter, object value)
+      {
+        SetParamInternal(parameter, value);
+        return this;
+      }
+
+      public APIRequest{{api:name:pascal_case}} SetParams(Dictionary<string, object> parameters)
+      {
+        SetParamsInternal(parameters);
+        return this;
+      }
+
+      {{#allow_file_upload}}
+      public APIRequest{{api:name:pascal_case}} AddUploadFile(string uploadName, FileInfo file)
+      {
+        SetParam(uploadName, file);
+        return this;
+      }
+ 
+      {{/allow_file_upload}}
+      {{#params}}
+      public APIRequest{{api:name:pascal_case}} Set{{name:pascal_case}}({{{type:csharp}}} value)
+      {
+        SetParam("{{api_name}}", value);
+        return this;
+      }
+
+      {{^is_string}}
+      public APIRequest{{api:name:pascal_case}} Set{{name:pascal_case}}(string value)
+      {
+        SetParam("{{api_name}}", value);
+        return this;
+      }
+
+      {{/is_string}}
+      {{/params}}
+      public APIRequest{{api:name:pascal_case}} RequestAllFields()
+      {
+        return RequestAllFields(true);
+      }
+
+      public APIRequest{{api:name:pascal_case}} RequestAllFields(bool value)
+      {
+        foreach (string field in FIELDS)
+        {
+          RequestField(field, value);
+        }
+        return this;
+      }
+
+      public APIRequest{{api:name:pascal_case}} RequestFields(IEnumerable<string> fields)
+      {
+        return RequestFields(fields, true);
+      }
+
+      public APIRequest{{api:name:pascal_case}} RequestFields(IEnumerable<string> fields, bool value)
+      {
+        foreach (string field in fields)
+        {
+          RequestField(field, value);
+        }
+        return this;
+      }
+
+      public APIRequest{{api:name:pascal_case}} RequestField(string field)
+      {
+        RequestField(field, true);
+        return this;
+      }
+
+      public APIRequest{{api:name:pascal_case}} RequestField(string field, bool value)
+      {
+        RequestFieldInternal(field, value);
+        return this;
+      }
+
+      {{#param_fields}}
+      {{^not_visible}}
+      public APIRequest{{api:name:pascal_case}} Request{{name:pascal_case}}Field()
+      {
+        return Request{{name:pascal_case}}Field(true);
+      }
+
+      public APIRequest{{api:name:pascal_case}} Request{{name:pascal_case}}Field(bool value)
+      {
+        RequestField("{{api_name}}", value);
+        return this;
+      }
+
+      {{/not_visible}}
+      {{/param_fields}}
+    }
+
+    {{/apis}}
+    #endregion
+
+    #region Referenced Enum types
+
+    {{#api_spec_based_enum_reference}}
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum Enum{{field_or_param:pascal_case}}
+    {
+      {{#values_with_naming_convention}}    
+      [EnumMember(Value = "{{{value}}}")]
+      VALUE_{{{value:upper_case}}},
+      {{/values_with_naming_convention}}
+    }
+
+    {{/api_spec_based_enum_reference}}
+    #endregion
+  }
+}

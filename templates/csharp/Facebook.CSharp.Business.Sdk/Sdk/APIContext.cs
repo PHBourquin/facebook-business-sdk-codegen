@@ -22,59 +22,49 @@
 */
 
 using System;
+using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Facebook.Ads.SDK
+namespace Facebook.Csharp.Business.Sdk.Sdk
 {
   public class APIContext
   {
-    public const string DEFAULT_API_BASE = APIConfig.DEFAULT_API_BASE;
-    public const string DEFAULT_API_VERSION = APIConfig.DEFAULT_API_VERSION;
-    protected bool isDebug = false;
-    //protected PrintStream logger = System.out;
+    private const string DefaultApiBase = APIConfig.DEFAULT_API_BASE;
+    private const string DefaultApiVersion = APIConfig.DEFAULT_API_VERSION;
 
     protected APIContext(string endpointBase, string version, string accessToken, string appSecret)
     {
-      this.Version = version;
-      this.EndpointBase = endpointBase;
-      this.AccessToken = accessToken;
-      this.AppSecret = appSecret;
+      Version = version;
+      EndpointBase = endpointBase;
+      AccessToken = accessToken;
+      AppSecret = appSecret;
+      HttpClient = new HttpClient();
     }
 
     public APIContext(string accessToken)
-      : this(DEFAULT_API_BASE, DEFAULT_API_VERSION, accessToken, null)
+      : this(DefaultApiBase, DefaultApiVersion, accessToken, null)
     {
     }
 
     public APIContext(string accessToken, string appSecret)
-      : this(DEFAULT_API_BASE, DEFAULT_API_VERSION, accessToken, appSecret)
+      : this(DefaultApiBase, DefaultApiVersion, accessToken, appSecret)
     {
     }
 
     public string EndpointBase { get; private set; }
-
     public string AccessToken { get; private set; }
-
     public string AppSecret { get; private set; }
-
-    public string AppSecretProof
-    {
-      get { return APIContext.sha256(this.AppSecret, this.AccessToken); }
-    }
-
+    public string AppSecretProof => Sha256(AppSecret, AccessToken);
     public string Version { get; private set; }
+    public HttpClient HttpClient { get; set; }
 
-    public bool IsDebug { get; set; }
-
-    // public PrintStream Logger() { }
-
-    public bool hasAppSecret()
+    public bool HasAppSecret()
     {
-      return this.AppSecret != null;
+      return AppSecret != null;
     }
 
-    public static string sha256(string secret, string message)
+    private string Sha256(string secret, string message)
     {
       try
       {
@@ -88,7 +78,7 @@ namespace Facebook.Ads.SDK
       }
     }
 
-    private static String ToHex(byte[] bytes)
+    private static string ToHex(byte[] bytes)
     {
       var sb = new StringBuilder();
       foreach (byte b in bytes)
@@ -97,9 +87,5 @@ namespace Facebook.Ads.SDK
       }
       return sb.ToString();
     }
-
-    //public void log(String s) {
-    //  if (isDebug && logger != null) logger.println(s);
-    //}
   }
 }
